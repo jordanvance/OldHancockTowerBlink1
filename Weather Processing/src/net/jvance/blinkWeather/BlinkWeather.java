@@ -25,7 +25,7 @@ public class BlinkWeather extends PApplet {
 	
 	//Leaving Processing in here to add a GUI display of the old hancock tower at some point
 	public static void main(String args[]) {
-		PApplet.main("net.jvance.blinkWeather.BlinkWeather");
+		PApplet.main("net.jvance.blinkWeather.BlinkWeather", new String[] {"--present"});
 	}
 	
 	public void setup() {
@@ -36,17 +36,17 @@ public class BlinkWeather extends PApplet {
 		}
 		fio = new ForecastIO("8a378214366053ca60d93c5c09c3d773");
 		fio.setUnits(ForecastIO.UNITS_US);
-		size(200, 200);
-		background(0,255,0);
-		setBackground(weather.getColor1());
+		size(300, 300);
+		background(192,255,0);
 	}
 	
 	public void draw() {
+
 		try {
 			watch = Stopwatch.createUnstarted();
 			while(true) {
 				System.out.println("Getting forecast...");
-				fio.getForecast("42.3581", "71.0636");
+				fio.getForecast("42.349939", "-71.072653");
 				FIOHourly hourly = new FIOHourly(fio);
 				if(hourly.hours() >= 0) {
 					FIODataPoint fdp = hourly.getHour(1);
@@ -54,7 +54,9 @@ public class BlinkWeather extends PApplet {
 						//Just continue with the current weather.
 					} else if(fdp.precipIntensity() > 0 && fdp.precipProbability() > .15) {
 						//Rain or hail == rain, snow or sleet == snow
-						if(fdp.precipType().equals("rain") || fdp.precipType().equals("hail")) {
+						String precipType = fdp.precipType();
+						System.out.println(precipType);
+						if(precipType.equals("\"rain\"") || precipType.equals("\"hail\"")) {
 							this.weather = WeatherType.RAIN;
 						} else {
 							this.weather = WeatherType.SNOW;
@@ -97,7 +99,7 @@ public class BlinkWeather extends PApplet {
 				changeColor(weather.getColor2());
 				Thread.sleep(TimeUnit.SECONDS.toMillis(2));	
 			}  else {
-				Thread.sleep(TimeUnit.MINUTES.toMillis(5));	
+				Thread.sleep(TimeUnit.MINUTES.toMillis(1));	
 			}
 		}
 	}
