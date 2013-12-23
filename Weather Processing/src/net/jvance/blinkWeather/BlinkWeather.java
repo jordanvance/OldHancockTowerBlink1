@@ -20,13 +20,12 @@ public class BlinkWeather extends PApplet {
 	private ForecastIO fio;
 	private WeatherType weather = WeatherType.CLEAR;
 	private static final long usualSleep = 30;
-	private static final long noAnswerSleepDefault = 20;
 	private Stopwatch watch;
 	
 	
 	//Leaving Processing in here to add a GUI display of the old hancock tower at some point
 	public static void main(String args[]) {
-		PApplet.main("net.jvance.blinkWeather.BlinkWeather", new String[] {"--present"});
+		PApplet.main("net.jvance.blinkWeather.BlinkWeather");
 	}
 	
 	public void setup() {
@@ -38,45 +37,40 @@ public class BlinkWeather extends PApplet {
 		fio = new ForecastIO("8a378214366053ca60d93c5c09c3d773");
 		fio.setUnits(ForecastIO.UNITS_US);
 		size(200, 200);
-		background(0,0,0);
+		background(0,255,0);
 		setBackground(weather.getColor1());
 	}
 	
 	public void draw() {
 		try {
 			watch = Stopwatch.createUnstarted();
-			long noAnswerSleepTime = noAnswerSleepDefault;
 			while(true) {
 				System.out.println("Getting forecast...");
 				fio.getForecast("42.3581", "71.0636");
 				FIOHourly hourly = new FIOHourly(fio);
-				if(hourly.hours() < 0) {
-					Thread.sleep(TimeUnit.MINUTES.toMillis(noAnswerSleepTime));
-					noAnswerSleepTime += 5;
-					continue;
-				} else {
+				if(hourly.hours() >= 0) {
 					FIODataPoint fdp = hourly.getHour(1);
 					if(fdp == null) {
-						Thread.sleep(TimeUnit.MINUTES.toMillis(noAnswerSleepTime));
-						continue;
-					}
-					if(fdp.precipIntensity() > 0 && fdp.precipProbability() > .15) {
+						//Just continue with the current weather.
+					} else if(fdp.precipIntensity() > 0 && fdp.precipProbability() > .15) {
+						//Rain or hail == rain, snow or sleet == snow
 						if(fdp.precipType().equals("rain") || fdp.precipType().equals("hail")) {
 							this.weather = WeatherType.RAIN;
 						} else {
 							this.weather = WeatherType.SNOW;
 						}
 					} else {
+						//If it's mostly cloudy... it's cloudy.
 						if(fdp.cloudCover() > .5) {
 							this.weather = WeatherType.CLOUDY;
 						} else {
 							this.weather = WeatherType.CLEAR;
 						}
 					}
+					System.out.println(weather.whatsTheForecast());
 					watch.reset();
 					watch.start();
-					setColors();
-					noAnswerSleepTime = noAnswerSleepDefault;					
+					setColors();				
 				}
 			}
 			
@@ -86,17 +80,17 @@ public class BlinkWeather extends PApplet {
 	}
 	
 	private void changeColor(Color color) {
-		blink1.setRGB(color);
+		blink1.fadeToRGB(500, color);
 		setBackground(color);
 	}
 	
 	private void setColors() throws InterruptedException {
 		changeColor(weather.getColor1());
 		while(watch.elapsed(TimeUnit.MINUTES) < usualSleep) {
-			long minutes = watch.elapsed(TimeUnit.MINUTES);
-			long seconds = watch.elapsed(TimeUnit.SECONDS) - minutes*60;
+			long seconds = (30*60-watch.elapsed(TimeUnit.SECONDS))%60;
+			long minutes = (30*60-watch.elapsed(TimeUnit.SECONDS))/60;
 			String time = String.format("%d:%02d", minutes, seconds);
-			System.out.println("Current weather has been around for " + time);			
+			System.out.println("Current weather (" + weather.whatsTheForecast() +") will be updated in " + time);			
 			if(weather.blinks()) {			
 				changeColor(weather.getColor1());
 				Thread.sleep(TimeUnit.SECONDS.toMillis(2));
