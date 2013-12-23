@@ -19,29 +19,33 @@ public class BlinkWeather extends PApplet {
 	private Blink1 blink1;
 	private ForecastIO fio;
 	private WeatherType weather = WeatherType.CLEAR;
-	private static final long usualSleep = 30;
+	private static final long usualSleep = 10;
 	private Stopwatch watch;
 	
 	
 	//Leaving Processing in here to add a GUI display of the old hancock tower at some point
 	public static void main(String args[]) {
 		PApplet.main("net.jvance.blinkWeather.BlinkWeather", new String[] {"--present"});
+		System.out.println("Starting up...");
 	}
 	
 	public void setup() {
+		size(300, 300);
+		background(0,255,0);
 		blink1 = new Blink1();
 		int rc = blink1.open();
 		if(rc != 0) {
-			return;
+			System.out.println("Couldn't find a Blink(1)");
 		}
 		fio = new ForecastIO("8a378214366053ca60d93c5c09c3d773");
 		fio.setUnits(ForecastIO.UNITS_US);
-		size(300, 300);
-		background(192,255,0);
+		thread("oldHancock");
 	}
 	
 	public void draw() {
-
+	}
+	
+	public void oldHancock() {
 		try {
 			watch = Stopwatch.createUnstarted();
 			while(true) {
@@ -74,8 +78,7 @@ public class BlinkWeather extends PApplet {
 					watch.start();
 					setColors();				
 				}
-			}
-			
+			}			
 		} catch (InterruptedException e) {
 			blink1.setRGB(Color.BLACK);
 		}
@@ -83,17 +86,17 @@ public class BlinkWeather extends PApplet {
 	
 	private void changeColor(Color color) {
 		blink1.fadeToRGB(500, color);
-		setBackground(color);
+		background(color.getRGB());
 	}
 	
 	private void setColors() throws InterruptedException {
 		changeColor(weather.getColor1());
 		while(watch.elapsed(TimeUnit.MINUTES) < usualSleep) {
-			long seconds = (30*60-watch.elapsed(TimeUnit.SECONDS))%60;
-			long minutes = (30*60-watch.elapsed(TimeUnit.SECONDS))/60;
+			long seconds = (usualSleep*60-watch.elapsed(TimeUnit.SECONDS))%60;
+			long minutes = (usualSleep*60-watch.elapsed(TimeUnit.SECONDS))/60;
 			String time = String.format("%d:%02d", minutes, seconds);
 			System.out.println("Current weather (" + weather.whatsTheForecast() +") will be updated in " + time);			
-			if(weather.blinks()) {			
+			if(weather.blinks()) {
 				changeColor(weather.getColor1());
 				Thread.sleep(TimeUnit.SECONDS.toMillis(2));
 				changeColor(weather.getColor2());
