@@ -44,7 +44,7 @@ public class BlinkWeather extends PApplet {
 	
 	public void draw() {
 		try {
-			watch = Stopwatch.createStarted();
+			watch = Stopwatch.createUnstarted();
 			long noAnswerSleepTime = noAnswerSleepDefault;
 			while(true) {
 				System.out.println("Getting forecast...");
@@ -73,6 +73,8 @@ public class BlinkWeather extends PApplet {
 							this.weather = WeatherType.CLEAR;
 						}
 					}
+					watch.reset();
+					watch.start();
 					setColors();
 					noAnswerSleepTime = noAnswerSleepDefault;					
 				}
@@ -104,7 +106,6 @@ public class BlinkWeather extends PApplet {
 				Thread.sleep(TimeUnit.MINUTES.toMillis(5));	
 			}
 		}
-		watch.reset();
 	}
 	
 }
