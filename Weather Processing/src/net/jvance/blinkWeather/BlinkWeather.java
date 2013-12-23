@@ -31,7 +31,7 @@ public class BlinkWeather extends PApplet {
 	
 	public void setup() {
 		size(300, 300);
-		background(0,255,0);
+		background(0,0,0);
 		blink1 = new Blink1();
 		int rc = blink1.open();
 		if(rc != 0) {
